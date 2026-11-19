@@ -80,6 +80,11 @@
  *                              C O N S T A N T S
  *******************************************************************************
  */
+#define IS_STA_DFS_CHANNEL_ENABLED(_ad) \
+	(TRUE)
+
+#define IS_STA_INDOOR_CHANNEL_ENABLED(_ad) \
+	(TRUE)
 
 #define MIN_TX_DURATION_TIME_MS 100
 

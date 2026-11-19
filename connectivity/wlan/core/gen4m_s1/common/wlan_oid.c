@@ -18329,3 +18329,76 @@ wlanoidGetNanDeviceInfo(IN struct ADAPTER *prAdapter,
 	pvQueryBuffer, u4QueryBufferLen, pu4QueryInfoLen);
 }
 #endif
+
+uint32_t
+wlanoidQueryLteSafeChannel(struct ADAPTER *prAdapter,
+			void *pvQueryBuffer, uint32_t u4QueryBufferLen,
+			uint32_t *pu4QueryInfoLen)
+{
+	struct CMD_GET_LTE_SAFE_CHN rQuery_LTE_SAFE_CHN = { 0 };
+
+	DBGLOG(P2P, TRACE, "query Lte safe channel bitmap");
+
+	if (!prAdapter) {
+		DBGLOG(P2P, ERROR, "no adapter found");
+		return WLAN_STATUS_FAILURE;
+	}
+
+	if (!pu4QueryInfoLen) {
+		DBGLOG(P2P, ERROR, "zero query info len");
+		return WLAN_STATUS_FAILURE;
+	}
+
+	if (u4QueryBufferLen && !pvQueryBuffer) {
+		DBGLOG(P2P, ERROR, "null query buffer with buffer len");
+		return WLAN_STATUS_FAILURE;
+	}
+
+	*pu4QueryInfoLen = sizeof(struct PARAM_GET_CHN_INFO);
+
+	if (u4QueryBufferLen < sizeof(struct PARAM_GET_CHN_INFO))
+		return WLAN_STATUS_BUFFER_TOO_SHORT;
+
+	return wlanSendSetQueryCmd(prAdapter,
+				CMD_ID_GET_LTE_CHN,
+				FALSE,
+				TRUE,
+				TRUE,
+				nicCmdEventQueryLteSafeChn,
+				nicOidCmdTimeoutCommon,
+				sizeof(struct CMD_GET_LTE_SAFE_CHN),
+				(uint8_t *)&rQuery_LTE_SAFE_CHN,
+				(struct PARAM_GET_CHN_INFO *)pvQueryBuffer,
+				u4QueryBufferLen);
+}
+
+uint32_t
+wlanoidGetAisConnectedChnls(struct ADAPTER *prAdapter, void *pvQueryBuffer,
+		    uint32_t u4QueryBufferLen, uint32_t *pu4QueryInfoLen)
+{
+	uint8_t ucBssIndex, i;
+	struct BSS_INFO *prBssInfo;
+	struct RF_CHANNEL_INFO *prChnlInfo;
+
+	i = 0;
+	prChnlInfo = (struct RF_CHANNEL_INFO *) pvQueryBuffer;
+
+	for (ucBssIndex = 0; ucBssIndex < BSSID_NUM; ucBssIndex++) {
+		prBssInfo = GET_BSS_INFO_BY_INDEX(prAdapter, ucBssIndex);
+
+		if (IS_BSS_AIS(prBssInfo) && IS_BSS_ALIVE(prAdapter,
+			prBssInfo)) {
+			prChnlInfo[i].eBand =
+				prBssInfo->eBand;
+			prChnlInfo[i].ucChannelNum =
+				prBssInfo->ucPrimaryChannel;
+			i = i + 1;
+			DBGLOG(REQ, INFO, "DFS STA band=%u, ch=%u\n",
+			       prBssInfo->eBand, prBssInfo->ucPrimaryChannel);
+		}
+	}
+
+	*pu4QueryInfoLen = i;
+
+	return WLAN_STATUS_SUCCESS;
+}

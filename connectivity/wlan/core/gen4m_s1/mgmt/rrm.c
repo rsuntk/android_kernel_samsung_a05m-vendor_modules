@@ -903,15 +903,13 @@ void rrmDoBeaconMeasurement(struct ADAPTER *prAdapter, unsigned long ulParam)
 		prRmReq->rBcnRmParam.eState = RM_WAITING;
 	} else {
 		uint8_t ucChannelListNum = 0;
-		struct RF_CHANNEL_INFO
-			arChnlInfoList[MAXIMUM_OPERATION_CHANNEL_LIST];
 		uint8_t maxDurationSec = 5;
 		uint16_t dur;
 
 		WLAN_GET_FIELD_16(&prBcnReq->u2Duration, &dur);
 		rlmDomainGetChnlListFromOpClass(prAdapter,
 			prBcnReq->ucRegulatoryClass,
-			arChnlInfoList, &ucChannelListNum);
+			NULL, &ucChannelListNum);
 
 		if (!!(prRmReq->prCurrMeasElem->ucRequestMode &
 				RM_REQ_MODE_DURATION_MANDATORY_BIT) &&
@@ -1781,9 +1779,19 @@ void rrmCollectBeaconReport(IN struct ADAPTER *prAdapter,
 		}
 	/* If channel number is 0, use op class to check */
 	} else if (bcnReq->ucChannel == 0) {
-		struct RF_CHANNEL_INFO aucChannelList[MAX_PER_BAND_CHN_NUM];
+		struct RF_CHANNEL_INFO *aucChannelList = NULL;
 		u_int8_t ucChannelListNum = 0;
-		kalMemZero(aucChannelList, sizeof(aucChannelList));
+
+		aucChannelList = kalMemAlloc(
+			sizeof(struct RF_CHANNEL_INFO) * MAX_PER_BAND_CHN_NUM,
+			VIR_MEM_TYPE);
+		if (!aucChannelList) {
+			DBGLOG(RRM, ERROR,
+			       "Alloc channel list failed, No Memory\n");
+			return;
+		}
+		kalMemZero(aucChannelList,
+			sizeof(struct RF_CHANNEL_INFO) * MAX_PER_BAND_CHN_NUM);
 
 		rlmDomainGetChnlListFromOpClass(prAdapter,
 			bcnReq->ucRegulatoryClass,
@@ -1804,7 +1812,11 @@ void rrmCollectBeaconReport(IN struct ADAPTER *prAdapter,
 				}
 			}
 		}
+
+		kalMemFree(aucChannelList, VIR_MEM_TYPE,
+			sizeof(struct RF_CHANNEL_INFO) * MAX_PER_BAND_CHN_NUM);
 	}
+
 	if (!validChannel) {
 		DBGLOG(RRM, INFO, ""MACSTR" chnl %d invalid, req %d\n",
 			MAC2STR(bssid), prBssDesc->ucChannelNum,

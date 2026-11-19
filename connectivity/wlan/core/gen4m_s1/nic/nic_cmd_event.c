@@ -5744,3 +5744,47 @@ void nicEventHandleDelayBar(IN struct ADAPTER *prAdapter,
 }
 #endif /* CFG_SUPPORT_BAR_DELAY_INDICATION */
 
+void nicCmdEventQueryLteSafeChnV2(struct ADAPTER *prAdapter,
+		struct CMD_INFO *prCmdInfo,
+		uint8_t *pucEventBuf)
+{
+	struct EVENT_LTE_SAFE_CHN *prEvent;
+	struct PARAM_GET_CHN_INFO *prLteSafeChnInfo;
+	uint8_t ucIdx = 0;
+
+	if ((prAdapter == NULL) || (prCmdInfo == NULL) || (pucEventBuf == NULL)
+			|| (prCmdInfo->pvInformationBuffer == NULL)) {
+		ASSERT(FALSE);
+		return;
+	}
+
+	prEvent = (struct EVENT_LTE_SAFE_CHN *) pucEventBuf;
+
+	prLteSafeChnInfo = (struct PARAM_GET_CHN_INFO *)
+			prCmdInfo->pvInformationBuffer;
+
+	/* Statistics from FW is valid */
+	if (prEvent->u4Flags & BIT(0)) {
+		struct LTE_SAFE_CHN_INFO *prLteSafeChnList;
+
+		prLteSafeChnList = &prLteSafeChnInfo->rLteSafeChnList;
+		for (ucIdx = 0; ucIdx <
+				ENUM_SAFE_CH_MASK_MAX_NUM;
+				ucIdx++) {
+			prLteSafeChnList->au4SafeChannelBitmask[ucIdx]
+				= prEvent->rLteSafeChn.
+					au4SafeChannelBitmask[ucIdx];
+
+			DBGLOG(NIC, TRACE,
+				"[ACS]LTE safe channels[%d]=0x%08x\n",
+				ucIdx,
+				prLteSafeChnList->au4SafeChannelBitmask[ucIdx]);
+		}
+	} else {
+		DBGLOG(NIC, ERROR, "FW's event is NOT valid.\n");
+	}
+
+	if (prCmdInfo->fgIsOid)
+		kalOidComplete(prAdapter->prGlueInfo, prCmdInfo,
+			sizeof(struct PARAM_GET_CHN_INFO), WLAN_STATUS_SUCCESS);
+}

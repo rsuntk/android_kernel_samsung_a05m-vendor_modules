@@ -3730,6 +3730,10 @@ void nicEventHandleDelayBar(IN struct ADAPTER *prAdapter,
 		      IN struct WIFI_EVENT *prEvent);
 #endif /* CFG_SUPPORT_BAR_DELAY_INDICATION */
 
+void nicCmdEventQueryLteSafeChnV2(struct ADAPTER *prAdapter,
+		struct CMD_INFO *prCmdInfo,
+		uint8_t *pucEventBuf);
+
 /*******************************************************************************
  *                              F U N C T I O N S
  *******************************************************************************

@@ -2135,6 +2135,20 @@ struct GLUE_INFO *wlanGetGlueInfo(void)
 	return prGlueInfo;
 }
 
+struct GLUE_INFO *wlanGetGlueInfoByWiphy(struct wiphy *wiphy)
+{
+	struct GLUE_INFO *prGlueInfo = NULL;
+
+	if (!wiphy) {
+		DBGLOG(INIT, ERROR, "wiphy is NULL\n");
+		return NULL;
+	}
+
+	WIPHY_PRIV(wiphy, prGlueInfo);
+
+	return prGlueInfo;
+}
+
 /*----------------------------------------------------------------------------*/
 /*!
  * \brief This function is to set multicast list and set rx mode.

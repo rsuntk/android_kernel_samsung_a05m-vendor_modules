@@ -532,4 +532,6 @@ void p2pFuncSetAclPolicy(
 	IN enum ENUM_PARAM_CUSTOM_ACL_POLICY ePolicy,
 	IN uint8_t aucAddr[]);
 
+u_int8_t p2pFuncIsLteSafeChnl(enum ENUM_BAND eBand, uint8_t ucChnlNum,
+				 uint32_t *pau4SafeChnl);
 #endif

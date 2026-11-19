@@ -1335,6 +1335,8 @@ void p2pSetMulticastListWorkQueueWrapper(struct GLUE_INFO
 #endif
 
 struct GLUE_INFO *wlanGetGlueInfo(void);
+struct GLUE_INFO *wlanGetGlueInfoByWiphy(struct wiphy *wiphy);
+
 #if KERNEL_VERSION(5, 4, 0) <= LINUX_VERSION_CODE
 u16 wlanSelectQueue(struct net_device *dev,
 		    struct sk_buff *skb,
